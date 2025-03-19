@@ -1,0 +1,17 @@
+query GetTournament($id: UUID, $reportsChannelId: String, $registerChannelId: String) {
+    tournament(id: $id, reportsChannelId: $reportsChannelId, registerChannelId: $registerChannelId) {
+        name,
+        operator,
+        id,
+        channel,
+        registerChannel,
+        role,
+        withBargains,
+        withBargainsColor,
+        withForeignHeroes,
+        organizer,
+        challongeId
+        gameType,
+        modType
+    }
+}

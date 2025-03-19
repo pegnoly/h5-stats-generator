@@ -1,0 +1,8 @@
+query GetMatches($tournamentId: UUID!, $userId: UUID) {
+    matches(tournamentId: $tournamentId, userId: $userId) {
+        id,
+        tournament,
+        firstPlayer,
+        secondPlayer
+    }
+}

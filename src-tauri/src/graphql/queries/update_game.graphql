@@ -1,0 +1,4 @@
+mutation UpdateGame($id: UUID!, $firstPlayerRace: Int, $firstPlayerHero: Int, $secondPlayerRace: Int, $secondPlayerHero: Int, $bargainsColor: BargainsColor, $bargainsAmount: Int, $result: GameResult, $outcome: GameOutcome) {
+    updateGame(id: $id, firstPlayerRace: $firstPlayerRace, firstPlayerHero: $firstPlayerHero, secondPlayerRace: $secondPlayerRace, secondPlayerHero: $secondPlayerHero, bargainsColor: $bargainsColor, bargainsAmount: $bargainsAmount, result: $result, outcome: $outcome
+    )
+}

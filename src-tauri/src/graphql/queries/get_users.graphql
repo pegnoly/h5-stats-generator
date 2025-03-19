@@ -1,0 +1,6 @@
+query GetUsers($tournamentId: UUID!) {
+    users(tournamentId: $tournamentId) {
+        id,
+        nickname
+    }
+}
