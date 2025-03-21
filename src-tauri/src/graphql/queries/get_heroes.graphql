@@ -1,0 +1,11 @@
+query GetHeroes($modType: ModType!) {
+    heroesNew(modType: $modType) {
+        heroes {
+            entities {
+                id,
+                race,
+                name
+            }
+        }
+    }
+}

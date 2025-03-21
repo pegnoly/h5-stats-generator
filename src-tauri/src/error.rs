@@ -1,7 +1,11 @@
+use strum::ParseError;
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(transparent)]
     Reqwest(#[from]reqwest::Error),
+    #[error(transparent)]
+    Parse(#[from]ParseError),
     #[error("Incorrect data for `{0}` request")]
     IncorrectData(String),
     #[error("Some uncategorized error: `{0}`")]

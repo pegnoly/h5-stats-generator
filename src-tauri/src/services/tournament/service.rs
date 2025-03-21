@@ -3,16 +3,10 @@ use reqwest::Client;
 use uuid::Uuid;
 
 use crate::graphql::queries::{
-    GetGames, GetMatches, GetTournament, GetTournaments, GetUsers, UpdateGame,
-    get_games::{self, GetGamesGames},
-    get_matches::{self, GetMatchesMatches},
-    get_tournament::{self, GetTournamentTournament},
-    get_tournaments::{self, GetTournamentsTournamentsAll},
-    get_users::{self, GetUsersUsers},
-    update_game,
+    get_games::{self, GetGamesGames}, get_heroes::{self, GetHeroesHeroesNewHeroesEntities}, get_matches::{self, GetMatchesMatches}, get_tournament::{self, GetTournamentTournament}, get_tournaments::{self, GetTournamentsTournamentsAll}, get_users::{self, GetUsersUsers}, update_game, GetGames, GetHeroes, GetMatches, GetTournament, GetTournaments, GetUsers, UpdateGame
 };
 
-use super::payloads::UpdateGamePayload;
+use super::{payloads::UpdateGamePayload, types::ModType};
 
 const MAIN_URL: &'static str = "https://h5-tournaments-api-5epg.shuttle.app/";
 
@@ -113,6 +107,18 @@ impl TournamentService {
         match result.data {
             Some(_data) => Ok(()),
             None => Err(crate::error::Error::IncorrectData("UpdateGame".to_string())),
+        }
+    }
+
+    pub async fn get_heroes(&self, mod_type: ModType) -> Result<Vec<GetHeroesHeroesNewHeroesEntities>, crate::error::Error> {
+        let query = GetHeroes::build_query(get_heroes::Variables {mod_type: mod_type.into()});
+        let response = self.client.post(MAIN_URL).json(&query).send().await?;
+        let result = response
+            .json::<Response<get_heroes::ResponseData>>()
+            .await?;
+        match result.data {
+            Some(data) => Ok(data.heroes_new.heroes.entities),
+            None => Err(crate::error::Error::IncorrectData("GetHeroes".to_string())),
         }
     }
 }
