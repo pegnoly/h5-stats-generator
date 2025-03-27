@@ -1,11 +1,14 @@
 import { invoke } from "@tauri-apps/api/core";
-import { Select } from "antd";
+import { Button, Select } from "antd";
 import { useEffect, useState } from "react";
 import { Tournament } from "./types/tournament";
 import useTournamentsStore from "./stores/tournament";
 import MatchesList from "./components/matchesList";
 import TournamentCore from "./components/tournamentCore";
 import { useShallow } from "zustand/shallow";
+import { Route, Routes } from "react-router";
+import MatchFocused from "./components/matchFocused";
+import Generator from "./components/generator";
 
 type TournamentData = {
     id: string,
@@ -39,7 +42,20 @@ function App() {
                 <Select.Option key={i} value={t.id}>{t.name}</Select.Option>
             ))}</Select>
             <TournamentCore/>
-            <MatchesList/>
+            <div style={{height: '80%', width: '100%', display: 'flex', flexDirection: 'row'}}>
+                <div style={{height: '100%', width: '35%'}}>
+                    <MatchesList/>
+                </div>
+                <Routes>
+                    <Route
+                        path="focus_match/:id"
+                        element={
+                            <MatchFocused/>
+                        }
+                    />
+                </Routes>
+            </div>
+            <Generator/>
         </>
     )
 }

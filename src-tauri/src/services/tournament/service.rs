@@ -3,7 +3,7 @@ use reqwest::Client;
 use uuid::Uuid;
 
 use crate::graphql::queries::{
-    get_games::{self, GetGamesGames}, get_heroes::{self, GetHeroesHeroesNewHeroesEntities}, get_matches::{self, GetMatchesMatches}, get_tournament::{self, GetTournamentTournament}, get_tournaments::{self, GetTournamentsTournamentsAll}, get_users::{self, GetUsersUsers}, update_game, GetGames, GetHeroes, GetMatches, GetTournament, GetTournaments, GetUsers, UpdateGame
+    get_all_games::{self, GetAllGamesGamesAll}, get_games::{self, GetGamesGames}, get_heroes::{self, GetHeroesHeroesNewHeroesEntities}, get_matches::{self, GetMatchesMatches}, get_tournament::{self, GetTournamentTournament}, get_tournaments::{self, GetTournamentsTournamentsAll}, get_users::{self, GetUsersUsers}, update_game, GetAllGames, GetGames, GetHeroes, GetMatches, GetTournament, GetTournaments, GetUsers, UpdateGame
 };
 
 use super::{payloads::UpdateGamePayload, types::ModType};
@@ -120,5 +120,17 @@ impl TournamentService {
             Some(data) => Ok(data.heroes_new.heroes.entities),
             None => Err(crate::error::Error::IncorrectData("GetHeroes".to_string())),
         }
+    }
+
+    pub async fn get_all_games(&self, tournament_id: Uuid) -> Result<Vec<GetAllGamesGamesAll>, crate::error::Error> {
+        let query = GetAllGames::build_query(get_all_games::Variables {tournament_id: tournament_id});
+        let response = self.client.post(MAIN_URL).json(&query).send().await?;
+        let result = response
+            .json::<Response<get_all_games::ResponseData>>()
+            .await?;
+        match result.data {
+            Some(data) => Ok(data.games_all),
+            None => Err(crate::error::Error::IncorrectData("GetAllGames".to_string())),
+        } 
     }
 }

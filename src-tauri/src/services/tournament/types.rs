@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use strum::{Display, EnumString};
 use tokio::sync::RwLockReadGuard;
 use uuid::Uuid;
-use crate::graphql::queries::{get_heroes, get_matches::GetMatchesMatches, get_tournament::{self, GetTournamentTournament}, get_users::GetUsersUsers, update_game};
+use crate::graphql::queries::{get_games::{self, GetGamesGames}, get_heroes, get_matches::GetMatchesMatches, get_tournament::{self, GetTournamentTournament}, get_users::GetUsersUsers, update_game, GetGames};
 
 // #[derive(Debug, Serialize, Deserialize)]
 // pub struct Match {
@@ -18,7 +18,7 @@ use crate::graphql::queries::{get_heroes, get_matches::GetMatchesMatches, get_to
 //     pub nickname: String,
 // }
 
-#[derive(Debug, Serialize, Deserialize, EnumString, Display)]
+#[derive(Debug, Serialize, Deserialize, EnumString, Display, Clone)]
 #[repr(i32)]
 pub enum ModType {
     Universe = 1,
@@ -61,6 +61,7 @@ impl Into<GameType> for get_tournament::GameType {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(i32)]
 pub enum GameResult {
     NotSelected = 0,
     FirstPlayerWon = 1,
@@ -73,6 +74,17 @@ impl Into<update_game::GameResult> for GameResult {
             GameResult::FirstPlayerWon => update_game::GameResult::FIRST_PLAYER_WON,
             GameResult::SecondPlayerWon => update_game::GameResult::SECOND_PLAYER_WON,
             GameResult::NotSelected => update_game::GameResult::NOT_SELECTED,
+        }
+    }
+}
+
+impl From<&get_games::GameResult> for GameResult {
+    fn from(value: &get_games::GameResult) -> Self {
+        match value {
+            get_games::GameResult::FIRST_PLAYER_WON => GameResult::FirstPlayerWon,
+            get_games::GameResult::SECOND_PLAYER_WON => GameResult::SecondPlayerWon,
+            get_games::GameResult::NOT_SELECTED => GameResult::NotSelected,
+            _=> unreachable!()
         }
     }
 }
@@ -94,6 +106,17 @@ impl Into<update_game::GameOutcome> for GameOutcome {
     }
 }
 
+impl From<&get_games::GameOutcome> for GameOutcome {
+    fn from(value: &get_games::GameOutcome) -> Self {
+        match value {
+            get_games::GameOutcome::FINAL_BATTLE_VICTORY => GameOutcome::FinalBattleVictory,
+            get_games::GameOutcome::NEUTRALS_VICTORY => GameOutcome::NeutralsVictory,
+            get_games::GameOutcome::OPPONENT_SURRENDER => GameOutcome::OpponentSurrender,
+            _=> unreachable!()
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum BargainsColor {
     NotSelected = 0,
@@ -107,6 +130,17 @@ impl Into<update_game::BargainsColor> for BargainsColor {
             BargainsColor::BargainsColorBlue => update_game::BargainsColor::BARGAINS_COLOR_BLUE,
             BargainsColor::BargainsColorRed => update_game::BargainsColor::BARGAINS_COLOR_RED,
             BargainsColor::NotSelected => update_game::BargainsColor::NOT_SELECTED,
+        }
+    }
+}
+
+impl From<&get_games::BargainsColor> for BargainsColor {
+    fn from(value: &get_games::BargainsColor) -> Self {
+        match value {
+            get_games::BargainsColor::BARGAINS_COLOR_BLUE => BargainsColor::BargainsColorBlue,
+            get_games::BargainsColor::BARGAINS_COLOR_RED => BargainsColor::BargainsColorRed,
+            get_games::BargainsColor::NOT_SELECTED => BargainsColor::NotSelected,
+            _=> unreachable!()
         }
     }
 }
@@ -186,4 +220,51 @@ impl GetMatchesMatches {
             second_user_nickname: second_user_nickname 
         })
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GameFrontendModel {
+    pub id: Uuid,
+    pub first_player_race: i64,
+    pub first_player_hero: i64,
+    pub second_player_race: i64,
+    pub second_player_hero: i64,
+    pub bargains_color: Option<BargainsColor>,
+    pub bargains_amount: i64,
+    pub result: GameResult,
+    pub outcome: GameOutcome
+}
+
+impl GetGamesGames {
+    pub fn into_frontend_model(&self) -> GameFrontendModel {
+        let first_player_race = self.first_player_race.unwrap_or(-1);
+        let first_player_hero = self.first_player_hero.unwrap_or(-1);
+        let second_player_race = self.second_player_race.unwrap_or(-1);
+        let second_player_hero = self.second_player_hero.unwrap_or(-1);
+        let bargains_color;
+        if let Some(color) = &self.bargains_color {
+            bargains_color = Some(BargainsColor::from(color));
+        } else {
+            bargains_color = None;
+        }
+        let bargains_amount = self.bargains_amount.unwrap_or(-1);
+
+        GameFrontendModel { 
+            id: self.id, 
+            first_player_race: first_player_race, 
+            first_player_hero: first_player_hero, 
+            second_player_race: second_player_race, 
+            second_player_hero: second_player_hero, 
+            bargains_color: bargains_color, 
+            bargains_amount: bargains_amount, 
+            result: GameResult::from(&self.result), 
+            outcome: GameOutcome::from(&self.outcome) 
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HeroFrontendModel {
+    pub id: i64,
+    pub name: String
 }

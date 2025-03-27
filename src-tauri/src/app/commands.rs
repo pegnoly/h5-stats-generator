@@ -12,7 +12,7 @@ use crate::{
     services::tournament::{
         payloads::UpdateGamePayload,
         service::TournamentService,
-        types::{BargainsColor, GameOutcome, GameResult, MatchFrontendModel, ModType, TournamentFrontendModel},
+        types::{BargainsColor, GameFrontendModel, GameOutcome, GameResult, HeroFrontendModel, MatchFrontendModel, ModType, TournamentFrontendModel},
     },
 };
 
@@ -89,9 +89,44 @@ pub async fn load_matches(
 #[tauri::command]
 pub async fn load_games(
     tournament_service: State<'_, TournamentService>,
+    app_manager: State<'_, AppManager>,
     match_id: Uuid,
-) -> Result<Vec<GetGamesGames>, crate::error::Error> {
-    Ok(tournament_service.get_games(match_id).await?)
+) -> Result<Vec<Uuid>, crate::error::Error> {
+    let games = tournament_service.get_games(match_id).await?;
+    let mut current_games_locked = app_manager.current_games.write().await;
+    *current_games_locked = games;
+    Ok(current_games_locked.iter().map(|g| g.id ).collect())
+}
+
+#[tauri::command]
+pub async fn select_game(
+    app_manager: State<'_, AppManager>,
+    game_id: Uuid
+) -> Result<GameFrontendModel, crate::error::Error> {
+    let games_locked = app_manager.current_games.read().await;
+    let game = games_locked.iter()
+        .find(|g| g.id == game_id)
+        .ok_or(crate::error::Error::Other("Game not found".to_string()))?;
+    Ok(game.into_frontend_model())
+}
+
+#[tauri::command]
+pub async fn get_heroes_of_race(
+    app_manager: State<'_, AppManager>,
+    race: i64
+) -> Result<Vec<HeroFrontendModel>, crate::error::Error> {
+    let heroes_locked = app_manager.current_heroes.read().await;
+    Ok(heroes_locked.iter()
+        .filter_map(|h| {
+            if h.race == race {
+                Some(HeroFrontendModel {
+                    id: h.id,
+                    name: h.name.clone()
+                })
+            } else {
+                None
+            }
+    }).collect())
 }
 
 #[tauri::command]
@@ -107,16 +142,24 @@ pub async fn update_game_first_player_race(
 #[tauri::command]
 pub async fn update_game_first_player_hero(
     tournament_service: State<'_, TournamentService>,
+    app_manager: State<'_, AppManager>,
     game_id: Uuid,
     hero: i64,
 ) -> Result<(), crate::error::Error> {
     let payload = UpdateGamePayload::new(game_id).with_first_player_hero(hero);
-    Ok(tournament_service.update_game(payload).await?)
+    tournament_service.update_game(payload).await?;
+    let mut games_locked = app_manager.current_games.write().await;
+    let focused_game = games_locked.iter_mut()
+        .find(|g| g.id == game_id)
+        .unwrap();
+    focused_game.first_player_hero = Some(hero);
+    Ok(())
 }
 
 #[tauri::command]
 pub async fn update_game_second_player_race(
     tournament_service: State<'_, TournamentService>,
+    app_manager: State<'_, AppManager>,
     game_id: Uuid,
     race: i64,
 ) -> Result<(), crate::error::Error> {

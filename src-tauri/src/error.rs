@@ -1,4 +1,6 @@
+use rust_xlsxwriter::XlsxError;
 use strum::ParseError;
+use uuid::Uuid;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -6,10 +8,17 @@ pub enum Error {
     Reqwest(#[from]reqwest::Error),
     #[error(transparent)]
     Parse(#[from]ParseError),
+    #[error(transparent)]
+    Xlsx(#[from]XlsxError),
     #[error("Incorrect data for `{0}` request")]
     IncorrectData(String),
     #[error("Some uncategorized error: `{0}`")]
-    Other(String)
+    Other(String),
+    #[error("No `{field:?}` field found for game `{game_id:?}`")]
+    NoGameField {
+      field: String,
+      game_id: Uuid
+    }
 }
 
 impl serde::Serialize for Error {

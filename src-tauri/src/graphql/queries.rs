@@ -47,7 +47,7 @@ pub struct GetTournaments;
 #[graphql(
     schema_path = "src/graphql/schema.json",
     query_path = "src/graphql/queries/get_tournament.graphql",
-    response_derives = "Debug, Serialize, Deserialize"
+    response_derives = "Debug, Serialize, Deserialize, Clone, PartialEq, Eq"
 )]
 pub struct GetTournament;
 
@@ -59,3 +59,11 @@ pub struct GetTournament;
     response_derives = "Debug, Serialize, Deserialize"
 )]
 pub struct GetHeroes;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/queries/get_all_games.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct GetAllGames;
