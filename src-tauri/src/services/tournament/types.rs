@@ -2,21 +2,7 @@ use serde::{Deserialize, Serialize};
 use strum::{Display, EnumString};
 use tokio::sync::RwLockReadGuard;
 use uuid::Uuid;
-use crate::graphql::queries::{get_games::{self, GetGamesGames}, get_heroes, get_matches::GetMatchesMatches, get_tournament::{self, GetTournamentTournament}, get_users::GetUsersUsers, update_game, GetGames};
-
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct Match {
-//     pub id: Uuid,
-//     pub tournament_id: Uuid,
-//     pub first_player: Uuid,
-//     pub second_player: Uuid,
-// }
-
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct User {
-//     pub id: Uuid,
-//     pub nickname: String,
-// }
+use crate::graphql::queries::{get_games::{self, GetGamesGames}, get_heroes, get_matches::GetMatchesMatches, get_tournament::{self, GetTournamentTournament}, get_users::GetUsersUsers, update_game};
 
 #[derive(Debug, Serialize, Deserialize, EnumString, Display, Clone)]
 #[repr(i32)]
@@ -60,7 +46,7 @@ impl Into<GameType> for get_tournament::GameType {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[repr(i32)]
 pub enum GameResult {
     NotSelected = 0,

@@ -54,10 +54,10 @@ function GameRenderer({gameId} : {gameId: string}) {
     const [firstPlayerHero, setFirstPlayerHero] = useState<number>(-1);
     const [secondPlayerRace, setSecondPlayerRace] = useState<number>(-1);
     const [secondPlayerHero, setSecondPlayerHero] = useState<number>(-1);
-    const [bargainsColor, setBargainsColor] = useState<BargainsColor | null>(null);
-    const [bargainsAmount, setBargainsAmount] = useState<number>(-1);
+    const [, setBargainsColor] = useState<BargainsColor | null>(null);
+    const [, setBargainsAmount] = useState<number>(-1);
     const [result, setResult] = useState<GameResult>(GameResult.NotSelected);
-    const [outcome, setOutcome] = useState<GameOutcome>(GameOutcome.FinalBattleVictory);
+    const [, setOutcome] = useState<GameOutcome>(GameOutcome.FinalBattleVictory);
 
     useEffect(() => {
         loadGame()
@@ -66,6 +66,11 @@ function GameRenderer({gameId} : {gameId: string}) {
     async function updateFirstPlayerHero(newHero: number) {
         await invoke("update_game_first_player_hero", {gameId: gameId, hero: newHero});
         setFirstPlayerHero(newHero);
+    }
+	
+	async function updateSecondPlayerHero(newHero: number) {
+        await invoke("update_game_second_player_hero", {gameId: gameId, hero: newHero});
+        setSecondPlayerHero(newHero);
     }
 
     const loadGame = async () => {
@@ -91,7 +96,7 @@ function GameRenderer({gameId} : {gameId: string}) {
             <div style={{width: '100%', display: 'flex', flexDirection: 'row', gap: 5, paddingTop: 25, paddingLeft: 7}}>
                 <PlayerDataRenderer race={firstPlayerRace} hero={firstPlayerHero} updateRace={setFirstPlayerRace} updateHero={updateFirstPlayerHero}/>
                 <ResultDataRenderer result={result} updateResult={setResult}/>
-                <PlayerDataRenderer race={secondPlayerRace} hero={secondPlayerHero} updateRace={setSecondPlayerRace} updateHero={setSecondPlayerHero}/>
+                <PlayerDataRenderer race={secondPlayerRace} hero={secondPlayerHero} updateRace={setSecondPlayerRace} updateHero={updateSecondPlayerHero}/>
             </div>
         </div>
     }</>

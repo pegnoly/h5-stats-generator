@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
+use types::GameEntry;
 
-use crate::graphql::queries::{get_all_games::GetAllGamesGamesAll, get_heroes::GetHeroesHeroesNewHeroesEntities, get_matches::GetMatchesMatches, get_tournament::GetTournamentTournament, get_users::GetUsersUsers};
+use crate::graphql::queries::{get_heroes::GetHeroesHeroesNewHeroesEntities, get_matches::GetMatchesMatches, get_tournament::GetTournamentTournament, get_users::GetUsersUsers};
 
 pub mod commands;
 pub mod pair;
@@ -20,7 +21,7 @@ pub struct TournamentStatsModel {
     pub tournament: Option<GetTournamentTournament>,
     pub users: Vec<GetUsersUsers>,
     pub matches: Vec<GetMatchesMatches>,
-    pub games: Vec<GetAllGamesGamesAll>,
+    pub games: Vec<GameEntry>,
     pub races: Vec<RaceInfo>,
     pub heroes: Vec<GetHeroesHeroesNewHeroesEntities>
 }

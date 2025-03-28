@@ -29,7 +29,7 @@ function MatchesList() {
     return <>
         <InfiniteScroll
             dataLength={matches.length}
-            height={550}
+            height={700}
             hasMore={false}
             next={() => {}}
             loader={<h4>Loading...</h4>}

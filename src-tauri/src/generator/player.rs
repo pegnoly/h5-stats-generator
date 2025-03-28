@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use rust_xlsxwriter::{workbook::Workbook, worksheet::{self, Worksheet}};
+use rust_xlsxwriter::{workbook::Workbook, worksheet::Worksheet};
 use uuid::Uuid;
 use super::{types::{GameHistoryEntry, PlayerMatchHistoryHeaders}, TournamentStatsModel};
-use crate::{error::Error as Error, generator::{styles::{Style, STYLES}, types::ResultOutput}, graphql::queries::{get_all_games::GetAllGamesGamesAll, get_matches::GetMatchesMatches}};
+use crate::{error::Error as Error, generator::{styles::{Style, STYLES}, types::{GameEntry, ResultOutput}}, graphql::queries::get_matches::GetMatchesMatches, services::tournament::types::GameResult};
 
 pub fn build_player_stats(model: &TournamentStatsModel, workbook: &mut Workbook) -> Result<(), Error> {
     let tournament = model.tournament.as_ref().ok_or(Error::Other("No tournament provided for generation".to_string()))?;
@@ -53,22 +53,18 @@ pub fn build_game_history(model: &TournamentStatsModel, worksheet: &mut Workshee
             .filter(|game| {
                 game.match_id == user_match.id
             })
-            .collect::<Vec<&GetAllGamesGamesAll>>();
+            .collect::<Vec<&GameEntry>>();
         
         println!("Games for match with {}: {}", opponent, &games.len());
 
         for game in games {
-            let first_player_race = game.first_player_race.ok_or(Error::NoGameField {field: "first_player_race".to_string(), game_id: game.id})?;
-            let first_player_hero = game.first_player_hero.ok_or(Error::NoGameField {field: "first_player_hero".to_string(), game_id: game.id})?;
-            let second_player_race = game.second_player_race.ok_or(Error::NoGameField {field: "second_player_race".to_string(), game_id: game.id})?;
-            let second_player_hero = game.second_player_hero.ok_or(Error::NoGameField {field: "second_player_hero".to_string(), game_id: game.id})?;
             let player_race = if is_first_player {
                 model.races.iter()
-                    .find(|r| r.id == first_player_race)
+                    .find(|r| r.id == game.first_player_race)
                     .ok_or(Error::Other("No matching race found".to_string()))?
             } else {
                 model.races.iter()
-                    .find(|r| r.id == second_player_race)
+                    .find(|r| r.id == game.second_player_race)
                     .ok_or(Error::Other("No matching race found".to_string()))?
             };
 
@@ -80,11 +76,11 @@ pub fn build_game_history(model: &TournamentStatsModel, worksheet: &mut Workshee
 
             let player_hero = if is_first_player {
                 model.heroes.iter()
-                    .find(|hero| hero.id == first_player_hero)
+                    .find(|hero| hero.id == game.first_player_hero)
                     .ok_or(Error::Other("No matching hero found".to_string()))?
             } else {
                 model.heroes.iter()
-                .find(|hero| hero.id == second_player_hero)
+                .find(|hero| hero.id == game.second_player_hero)
                 .ok_or(Error::Other("No matching hero found".to_string()))?
             };
 
@@ -96,45 +92,40 @@ pub fn build_game_history(model: &TournamentStatsModel, worksheet: &mut Workshee
 
             let opponent_race = if is_first_player {
                 &model.races.iter()
-                    .find(|r| r.id == second_player_race)
+                    .find(|r| r.id == game.second_player_race)
                     .ok_or(Error::Other("No matching race found".to_string()))?
                     .name
             } else {
                 &model.races.iter()
-                    .find(|r| r.id == first_player_race)
+                    .find(|r| r.id == game.first_player_race)
                     .ok_or(Error::Other("No matching race found".to_string()))?
                     .name
             };
             let opponent_hero = if is_first_player {
                 &model.heroes.iter()
-                    .find(|hero| hero.id == second_player_hero)
+                    .find(|hero| hero.id == game.second_player_hero)
                     .ok_or(Error::Other("No matching hero found".to_string()))?
                     .name
             } else {
                 &model.heroes.iter()
-                .find(|hero| hero.id == first_player_hero)
+                .find(|hero| hero.id == game.first_player_hero)
                 .ok_or(Error::Other("No matching hero found".to_string()))?
                 .name
             };
 
-            let bargains_amount = if game.bargains_amount.is_some() {
-                let actual_amount = game.bargains_amount.unwrap();
-                if actual_amount == 0 {
-                    None
-                } else {
-                    if !is_first_player {
-                        Some(actual_amount * -1)
-                    } else {
-                        Some(actual_amount)
-                    }
-                }
-            } else {
+            let bargains_amount = if game.bargains_amount == -1 { 
                 None
+            } else {
+                if !is_first_player {
+                    Some(game.bargains_amount * -1)
+                } else {
+                    Some(game.bargains_amount)
+                }
             };
 
             let result = if is_first_player {
                 match game.result {
-                    crate::graphql::queries::get_all_games::GameResult::FIRST_PLAYER_WON => {
+                    GameResult::FirstPlayerWon => {
 
                         if let Some(race_wins_count) = user_race_wins.get_mut(&player_race.id) {
                             *race_wins_count += 1;
@@ -150,13 +141,13 @@ pub fn build_game_history(model: &TournamentStatsModel, worksheet: &mut Workshee
 
                         ResultOutput::Win
                     },
-                    crate::graphql::queries::get_all_games::GameResult::SECOND_PLAYER_WON => ResultOutput::Loss,
+                    GameResult::SecondPlayerWon => ResultOutput::Loss,
                     _=> unreachable!()
                 }
             } else {
                 match game.result {
-                    crate::graphql::queries::get_all_games::GameResult::FIRST_PLAYER_WON => ResultOutput::Loss,
-                    crate::graphql::queries::get_all_games::GameResult::SECOND_PLAYER_WON => { 
+                    GameResult::FirstPlayerWon => ResultOutput::Loss,
+                    GameResult::SecondPlayerWon => { 
                         if let Some(race_wins_count) = user_race_wins.get_mut(&player_race.id) {
                             *race_wins_count += 1;
                         } else {

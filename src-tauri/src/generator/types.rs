@@ -1,6 +1,8 @@
 use rust_xlsxwriter::worksheet::Worksheet;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-use crate::{error::Error, graphql::queries::get_tournament::{self, GetTournamentTournament}};
+use crate::{error::Error, graphql::queries::{get_all_games, get_tournament::{self, GetTournamentTournament}}, services::tournament::types::{BargainsColor, GameOutcome, GameResult}};
 
 use super::styles::{Style, STYLES};
 
@@ -91,5 +93,63 @@ impl<'a> GameHistoryEntry<'a> {
             worksheet.write_with_format(row, col, outcome, STYLES.get(&Style::ThinBorderTextWrap)?)?;
         }
         Ok(())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GameEntry {
+    pub match_id: Uuid,
+    pub first_player_race: i64,
+    pub first_player_hero: i64,
+    pub second_player_race: i64,
+    pub second_player_hero: i64,
+    pub bargains_amount: i64,
+    pub bargains_color: Option<BargainsColor>,
+    pub result: GameResult,
+    pub outcome: GameOutcome
+}
+
+impl Into<GameResult> for get_all_games::GameResult {
+    fn into(self) -> GameResult {
+        match self {
+            get_all_games::GameResult::FIRST_PLAYER_WON => GameResult::FirstPlayerWon,
+            get_all_games::GameResult::SECOND_PLAYER_WON => GameResult::SecondPlayerWon,
+            get_all_games::GameResult::NOT_SELECTED => GameResult::NotSelected,
+            _=> unreachable!()
+        }
+    }
+}
+
+impl Into<GameOutcome> for get_all_games::GameOutcome {
+    fn into(self) -> GameOutcome {
+        match self {
+            get_all_games::GameOutcome::FINAL_BATTLE_VICTORY => GameOutcome::FinalBattleVictory,
+            get_all_games::GameOutcome::NEUTRALS_VICTORY => GameOutcome::NeutralsVictory,
+            get_all_games::GameOutcome::OPPONENT_SURRENDER => GameOutcome::OpponentSurrender,
+            _=> unreachable!()
+        }
+    }
+}
+
+impl TryFrom<get_all_games::GetAllGamesGamesAll> for GameEntry {
+    type Error = crate::error::Error;
+
+    fn try_from(value: get_all_games::GetAllGamesGamesAll) -> Result<Self, Self::Error> {
+        let first_player_race = value.first_player_race.ok_or(Error::NoGameField {field: "first_player_race".to_string(), game_id: value.id})?;
+        let first_player_hero = value.first_player_hero.ok_or(Error::NoGameField {field: "first_player_hero".to_string(), game_id: value.id})?;
+        let second_player_race = value.second_player_race.ok_or(Error::NoGameField {field: "second_player_race".to_string(), game_id: value.id})?;
+        let second_player_hero = value.second_player_hero.ok_or(Error::NoGameField {field: "second_player_hero".to_string(), game_id: value.id})?;
+
+        Ok(GameEntry {
+            match_id: value.match_id,
+            first_player_race: first_player_race,
+            first_player_hero: first_player_hero,
+            second_player_race: second_player_race,
+            second_player_hero: second_player_hero,
+            bargains_amount: -1,
+            bargains_color: None,
+            result: value.result.into(),
+            outcome: value.outcome.into()
+        })
     }
 }

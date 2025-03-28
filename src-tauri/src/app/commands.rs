@@ -170,11 +170,18 @@ pub async fn update_game_second_player_race(
 #[tauri::command]
 pub async fn update_game_second_player_hero(
     tournament_service: State<'_, TournamentService>,
+    app_manager: State<'_, AppManager>,
     game_id: Uuid,
     hero: i64,
 ) -> Result<(), crate::error::Error> {
     let payload = UpdateGamePayload::new(game_id).with_second_player_hero(hero);
-    Ok(tournament_service.update_game(payload).await?)
+    tournament_service.update_game(payload).await?;
+    let mut games_locked = app_manager.current_games.write().await;
+    let focused_game = games_locked.iter_mut()
+        .find(|g| g.id == game_id)
+        .unwrap();
+    focused_game.second_player_hero = Some(hero);
+    Ok(())
 }
 
 #[tauri::command]

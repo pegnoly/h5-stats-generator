@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { Button, Select } from "antd";
+import { Select } from "antd";
 import { useEffect, useState } from "react";
 import { Tournament } from "./types/tournament";
 import useTournamentsStore from "./stores/tournament";
