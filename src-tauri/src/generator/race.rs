@@ -62,6 +62,14 @@ impl RaceStatsBuilder {
         worksheet: &mut Worksheet,
         row: u32
     ) -> Result<(), Error> {
+        let width = heroes_data.iter()
+            .filter(|h| h.race == race.id)
+            .map(|h| h.name.clone())
+            .collect::<Vec<String>>().iter()
+            .max_by_key(|x| x.len()).ok_or(crate::error::Error::Other("Max by key error".to_string()))?
+            .chars()
+            .count();
+        worksheet.set_column_width(0, (width + 1) as f64)?;
         worksheet.merge_range(row, 4, row, 9, "Общая статистика использования героев", STYLES.get(&Style::TextBoldCentered)?)?;
         let mut row = row + 2;
         let mut heroes_count = 0;
@@ -126,7 +134,7 @@ impl RaceStatsBuilder {
     
             let total_hero_games = hero_losses.len() + hero_wins.len();
     
-            worksheet.write_with_format(row + heroes_count, 0, &hero.name, STYLES.get(&Style::ThinBorderTextWrap)?)?;
+            worksheet.write_with_format(row + heroes_count, 0, &hero.name, STYLES.get(&Style::TextBoldCentered)?)?;
             worksheet.write_with_format(row + heroes_count, 1, hero_wins.len() as u32, STYLES.get(&Style::ThinBorderTextWrap)?)?;
             worksheet.write_with_format(row + heroes_count, 2, hero_losses.len() as u32, STYLES.get(&Style::ThinBorderTextWrap)?)?;
             worksheet.write_with_format(row + heroes_count, 3, total_hero_games as u32, STYLES.get(&Style::ThinBorderTextWrap)?)?;
