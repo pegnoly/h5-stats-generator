@@ -13,16 +13,16 @@ pub struct PlayerMatchHistoryHeaders<'a> {
 impl<'a> PlayerMatchHistoryHeaders<'a> {
     pub fn new(tournament_info: &GetTournamentTournament) -> Self {
         let mut headers = vec!["Фракция игрока", "Фракция оппонента", "Герой игрока", "Герой оппонента"];
-        if tournament_info.with_bargains == true {
+        if tournament_info.with_bargains {
             headers.push("Торг игрока");
         }
-        if tournament_info.with_bargains_color == true {
+        if tournament_info.with_bargains_color {
             headers.push("Цвет торга");
         }
         headers.push("Результат");
-        if tournament_info.game_type == get_tournament::GameType::RMG {
-            headers.push("Исход");
-        }
+        // if tournament_info.game_type == get_tournament::GameType::RMG {
+        //     headers.push("Исход");
+        // }
         PlayerMatchHistoryHeaders { headers: headers }
     }
 
@@ -54,7 +54,7 @@ pub struct GameHistoryEntry<'a> {
     pub opponent_race: &'a String,
     pub opponent_hero: &'a String,
     pub bargains_amount: Option<i64>,
-    pub bargains_color: Option<&'a String>,
+    pub bargains_color: Option<&'a str>,
     pub result: ResultOutput,
     pub outcome: Option<&'a String>
 }
@@ -77,6 +77,7 @@ impl<'a> GameHistoryEntry<'a> {
             col+=1;
         }
         if let Some(bargains_color) = self.bargains_color {
+            println!("Bargains color: {bargains_color}");
             worksheet.write_with_format(row, col, bargains_color, STYLES.get(&Style::ThinBorderTextWrap)?)?;
             col+=1;
         };
@@ -147,7 +148,15 @@ impl TryFrom<get_all_games::GetAllGamesGamesAll> for GameEntry {
             second_player_race,
             second_player_hero,
             bargains_amount: value.bargains_amount.unwrap_or(-1),
-            bargains_color: None,
+            bargains_color: if let Some(color) = value.bargains_color {
+                match color {
+                    get_all_games::BargainsColor::BARGAINS_COLOR_BLUE => Some(BargainsColor::BargainsColorBlue),
+                    get_all_games::BargainsColor::BARGAINS_COLOR_RED => Some(BargainsColor::BargainsColorRed),
+                    _=> unreachable!()
+                }
+            } else {
+                None
+            },
             result: value.result.into(),
             outcome: value.outcome.into()
         })

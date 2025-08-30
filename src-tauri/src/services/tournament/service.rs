@@ -89,7 +89,7 @@ impl TournamentService {
     }
 
     pub async fn get_games(&self, match_id: Uuid) -> Result<Vec<GetGamesGames>, crate::error::Error> {
-        let query = GetGames::build_query(get_games::Variables { match_id: match_id });
+        let query = GetGames::build_query(get_games::Variables { match_id });
         let response = self.client.post(MAIN_URL).json(&query).send().await?;
         let result = response.json::<Response<get_games::ResponseData>>().await?;
         match result.data {

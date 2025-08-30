@@ -180,6 +180,8 @@ impl RaceStatsBuilder {
         // this one shows complete race bargains data
         let race_bargains_total_data = self.bargains_data.get(&race).unwrap();
 
+        // println!("Race bargains data for {race}: {race_bargains_total_data:#?}");
+
         let total_average_bargain = race_bargains_total_data.average_bargains.iter().sum::<f64>() / 7.0;
         let total_plus_bargain_games = race_bargains_total_data.total_plus_bargain_games;
         let total_minus_bargain_games = race_bargains_total_data.total_minus_bargain_games;
@@ -364,7 +366,9 @@ impl RaceStatsBuilder {
         let bargains_sum = plus_bargains_sum + minus_bargains_sum;
 
         // average in this pair
-        self.bargains_data.get_mut(&race).unwrap().average_bargains.push(bargains_sum as f64 / (plus_games_count + minus_games_count) as f64);
+        self.bargains_data.get_mut(&race).unwrap().average_bargains.push(if bargains_sum == 0 { 0.0 } else { 
+            bargains_sum as f64 / (plus_games_count + minus_games_count) as f64
+        });
 
         worksheet.write_with_format(
             data_row, 

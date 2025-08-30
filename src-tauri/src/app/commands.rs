@@ -76,11 +76,7 @@ pub async fn load_matches(
     let users_data = app_manager.current_users.read().await;
     let matches = tournament_service.get_matches(tournament_id, user_id).await?.into_iter()
         .filter_map(|m| {
-            if let Ok(converted_match) = m.into_frontend_model(&users_data) {
-                Some(converted_match)
-            } else {
-                None
-            }
+            m.into_frontend_model(&users_data).ok()
         })
         .collect::<Vec<MatchFrontendModel>>();
     Ok(matches)

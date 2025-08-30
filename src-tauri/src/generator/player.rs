@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use rust_xlsxwriter::{workbook::Workbook, worksheet::Worksheet};
 use uuid::Uuid;
 use super::{types::{GameHistoryEntry, PlayerMatchHistoryHeaders}, TournamentStatsModel};
-use crate::{error::Error as Error, generator::{styles::{Style, STYLES}, types::{GameEntry, ResultOutput}}, graphql::queries::get_matches::GetMatchesMatches, services::tournament::types::GameResult};
+use crate::{error::Error as Error, generator::{styles::{Style, STYLES}, types::{GameEntry, ResultOutput}}, graphql::queries::get_matches::GetMatchesMatches, services::tournament::types::{BargainsColor, GameResult}};
 
 pub fn build_player_stats(model: &TournamentStatsModel, workbook: &mut Workbook) -> Result<(), Error> {
     let tournament = model.tournament.as_ref().ok_or(Error::Other("No tournament provided for generation".to_string()))?;
@@ -36,7 +36,7 @@ pub fn build_game_history(model: &TournamentStatsModel, worksheet: &mut Workshee
     let mut game_row = 2;
 
     for user_match in user_matches {
-        let is_first_player = if user_match.first_player == user { true } else { false };
+        let is_first_player = user_match.first_player == user;
         let opponent = if is_first_player { 
             &model.users.iter()
                 .find(|user| user.id == user_match.second_player)
@@ -115,12 +115,10 @@ pub fn build_game_history(model: &TournamentStatsModel, worksheet: &mut Workshee
 
             let bargains_amount = if game.bargains_amount == -1 { 
                 None
+            } else if !is_first_player {
+                Some(-game.bargains_amount)
             } else {
-                if !is_first_player {
-                    Some(game.bargains_amount * -1)
-                } else {
-                    Some(game.bargains_amount)
-                }
+                Some(game.bargains_amount)
             };
 
             let result = if is_first_player {
@@ -165,15 +163,25 @@ pub fn build_game_history(model: &TournamentStatsModel, worksheet: &mut Workshee
                 }
             };
 
+            println!("Game: {game:#?}");
+
             let game_history_entry = GameHistoryEntry {
-                opponent: opponent,
+                opponent,
                 player_race: &player_race.name,
                 player_hero: &player_hero.name,
-                opponent_race: opponent_race,
-                opponent_hero: opponent_hero,
-                bargains_amount: bargains_amount,
-                bargains_color: None,
-                result: result,
+                opponent_race,
+                opponent_hero,
+                bargains_amount,
+                bargains_color: if let Some(color) = &game.bargains_color {
+                    match color {
+                        BargainsColor::BargainsColorBlue => Some("Синий"),
+                        BargainsColor::BargainsColorRed => Some("Красный"),
+                        _=> unreachable!()
+                    }
+                } else {
+                    None
+                },
+                result,
                 outcome: None
             };
 
