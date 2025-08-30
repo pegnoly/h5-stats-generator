@@ -45,6 +45,6 @@ pub async fn invoke_generation(
     race_stats_builder.build(&tournament_stats_model, &mut workbook)?;
     build_player_stats(&tournament_stats_model, &mut workbook)?;
     println!("Done");
-    workbook.save("C:\\Users\\pegn0ly\\Desktop\\frfb1.xlsx")?;
+    workbook.save("D:\\test.xlsx")?;
     Ok(()) 
 }

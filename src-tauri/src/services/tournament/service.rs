@@ -59,7 +59,7 @@ impl TournamentService {
         tournament_id: Uuid,
     ) -> Result<Vec<GetUsersUsers>, crate::error::Error> {
         let query = GetUsers::build_query(get_users::Variables {
-            tournament_id: tournament_id,
+            tournament_id,
         });
         let response = self.client.post(MAIN_URL).json(&query).send().await?;
         let result = response.json::<Response<get_users::ResponseData>>().await?;
@@ -75,7 +75,7 @@ impl TournamentService {
         player: Option<Uuid>,
     ) -> Result<Vec<GetMatchesMatches>, crate::error::Error> {
         let query = GetMatches::build_query(get_matches::Variables {
-            tournament_id: tournament_id,
+            tournament_id,
             user_id: player,
         });
         let response = self.client.post(MAIN_URL).json(&query).send().await?;
@@ -123,7 +123,7 @@ impl TournamentService {
     }
 
     pub async fn get_all_games(&self, tournament_id: Uuid) -> Result<Vec<GetAllGamesGamesAll>, crate::error::Error> {
-        let query = GetAllGames::build_query(get_all_games::Variables {tournament_id: tournament_id});
+        let query = GetAllGames::build_query(get_all_games::Variables {tournament_id});
         let response = self.client.post(MAIN_URL).json(&query).send().await?;
         let result = response
             .json::<Response<get_all_games::ResponseData>>()
@@ -132,5 +132,11 @@ impl TournamentService {
             Some(data) => Ok(data.games_all),
             None => Err(crate::error::Error::IncorrectData("GetAllGames".to_string())),
         } 
+    }
+}
+
+impl Default for TournamentService {
+    fn default() -> Self {
+        Self::new()
     }
 }

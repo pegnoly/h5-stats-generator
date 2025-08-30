@@ -142,11 +142,11 @@ impl TryFrom<get_all_games::GetAllGamesGamesAll> for GameEntry {
 
         Ok(GameEntry {
             match_id: value.match_id,
-            first_player_race: first_player_race,
-            first_player_hero: first_player_hero,
-            second_player_race: second_player_race,
-            second_player_hero: second_player_hero,
-            bargains_amount: -1,
+            first_player_race,
+            first_player_hero,
+            second_player_race,
+            second_player_hero,
+            bargains_amount: value.bargains_amount.unwrap_or(-1),
             bargains_color: None,
             result: value.result.into(),
             outcome: value.outcome.into()
