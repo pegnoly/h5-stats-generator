@@ -12,7 +12,7 @@ pub struct PlayerMatchHistoryHeaders<'a> {
 
 impl<'a> PlayerMatchHistoryHeaders<'a> {
     pub fn new(tournament_info: &GetTournamentTournament) -> Self {
-        let mut headers = vec!["Фракция игрока", "Фракция оппонента", "Герой игрока", "Герой оппонента"];
+        let mut headers = vec!["Фракция игрока", "Герой игрока", "Фракция оппонента", "Герой оппонента"];
         if tournament_info.with_bargains {
             headers.push("Торг игрока");
         }

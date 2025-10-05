@@ -140,6 +140,7 @@ impl RaceStatsBuilder {
             .filter(|game| {
                 !(game.bargains_amount != 0 || game.first_player_race != race && game.second_player_race != race)
             })
+            .filter(|game| (game.first_player_race != game.second_player_race))
             .collect_vec();
 
         // setup table shape
@@ -193,7 +194,7 @@ impl RaceStatsBuilder {
         let total_minus_bargain_winrate = total_minus_bargain_wins as f64 / total_minus_bargain_games as f64 * 100.0;
         let total_no_bargains_winrate = total_no_bargains_wins as f64 / total_no_bargains_games as f64 * 100.0;
 
-        let total_winrate = (total_plus_bargain_wins + total_minus_bargain_wins) as f64 / (total_minus_bargain_games + total_plus_bargain_games) as f64 * 100.0;
+        let total_winrate = (total_plus_bargain_wins + total_minus_bargain_wins + total_no_bargains_wins) as f64 / (total_minus_bargain_games + total_plus_bargain_games + total_no_bargains_games) as f64 * 100.0;
 
         worksheet.write_with_format(data_row, TOTAL_AVG_BARGAINS_COL, format!("{total_average_bargain:.2}"), STYLES.get(&Style::ThinBorderTextWrap)?)?;
         worksheet.write_with_format(data_row, TOTAL_PLUS_GOLD_GAMES_COL, total_plus_bargain_games, STYLES.get(&Style::ThinBorderTextWrap)?)?;
